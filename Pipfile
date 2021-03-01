@@ -7,6 +7,8 @@ name = "pypi"
 scrapy = "*"
 requests = "*"
 beautifulsoup4 = "*"
+pillow = "*"
+selenium = "*"
 
 [dev-packages]
 
