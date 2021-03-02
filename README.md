@@ -1,7 +1,12 @@
 # CrawlProject
 Korea Univ Paper Crawler Project
 
+# Usage
+## Environment
+```
 python 3.7.8
+```
+## Stage
 ```
 1) install pip
 2) command : pip install pip env (with powershell)
