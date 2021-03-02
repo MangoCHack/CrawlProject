@@ -45,6 +45,23 @@ def initialize_database(dbName : str):
     dbConnection.commit()
     return dbConnection
 
+def initialize_database2(dbName : str):
+    dbConnection = connect_database(dbName)
+    cursor = dbConnection.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sites_connection(
+            main_url TEXT,
+            main_ip TEXT,
+            connect_url TEXT,
+            connect_ip TEXT
+        )
+    """
+    )
+    dbConnection.commit()
+    return dbConnection
+
 def insert_row(dbConnection, row: Dict[str, Optional[str]]):
     connection = dbConnection
     with connection:
