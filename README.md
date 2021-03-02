@@ -2,6 +2,7 @@
 Korea Univ Paper Crawler Project
 
 # Usage
+Scrapy 모듈을 사용한 크롤러 작성
 ## Environment
 ```
 python 3.7.8
