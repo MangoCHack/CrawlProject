@@ -15,14 +15,18 @@ class SitesPySpider(scrapy.Spider):
     def start_requests(self):
         dbConnect = initialize_database("illegals.db")
         self.start_urls = select_all_fullurls(dbConnect)
+        self.mainIPs = []
         self.tmpStore = {}
-        self.dbConnectStore = initialize_database2('sites_connection.db') # 결과물 DB 저장 초기화
+        self.dbConnectStore = initialize_database2('sites_connection2.db') # 결과물 DB 저장 초기화
         for url in self.start_urls:
             yield scrapy.Request( url = url, callback= self.link_parse, method='GET', encoding = 'utf=8')
         
 
     def link_parse(self, response):
         baseIP = get_ip(response.url)
+        if baseIP in self.mainIPs:
+            yield 0
+        self.mainIPs.append(baseIP)
         print(response.url, baseIP)
         links = response.xpath('//a/@href').re(r'http.*') # ToDo : banner link만 수집할 수 있도록 수정
         for link in links:
@@ -40,7 +44,6 @@ class SitesPySpider(scrapy.Spider):
                                 \'{row["connect_ip"]}\'
                             )
                         """
-                        
                         cursor.execute(sql)
                         self.dbConnectStore.commit()
                     print("[+] db store : %s, %s" % (baseIP, ip))
@@ -50,6 +53,22 @@ class SitesPySpider(scrapy.Spider):
         yield links
 
     def link_parse2(self, response): #임시 테스트 결과 메모리저장
+        baseIP = get_ip(response.url)
+        print(response.url, baseIP)
+        links = response.xpath('//a/@href').re(r'http.*')
+        for link in links:
+            try:
+                ip = get_ip(link)
+                if (baseIP in self.tmpStore.keys()) and (ip not in self.tmpStore[baseIP]):
+                    self.tmpStore[baseIP].append(ip)
+                    print("[+] db store : %s, %s" % (baseIP, ip))
+                else:
+                    self.tmpStore[baseIP] = [ip,]
+            except:
+                continue
+        yield self.tmpStore
+
+    def trace_parse(self, response): #추적
         baseIP = get_ip(response.url)
         print(response.url, baseIP)
         links = response.xpath('//a/@href').re(r'http.*')

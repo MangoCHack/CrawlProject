@@ -9,6 +9,10 @@ requests = "*"
 beautifulsoup4 = "*"
 pillow = "*"
 selenium = "*"
+dash = "==1.19.0"
+pandas = "*"
+dash-cytoscape = "*"
+biopython = "*"
 
 [dev-packages]
 
