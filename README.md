@@ -12,9 +12,9 @@ python 3.7.8
 1) install pip
 2) command : pip install pip env (with powershell)
 3) git clone this project
-4) command : pipenv run(in project folder)
+4) command : pipenv shell(in project folder)
 5) command : pipenv install(install packages)
-6) command : scrapy sites --nolog (sites is spider name)
+6) command : scrapy crawl sites --nolog (sites is spider name)
 ```
 * illegals.db is first db for get connection sites
 * sites_connection.db is result db from scrapy crawler
