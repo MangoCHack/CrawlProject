@@ -2,7 +2,7 @@
 import scrapy
 from datetime import datetime as dt
 from urllib.parse import urlparse
-from util.utils import get_ip, initialize_database, select_all_fullurls, initialize_database2
+from util.utils import get_ip, initialize_database, select_all_fullurls, initialize_database2, select_all_urls
 
 class SitesPySpider(scrapy.Spider):
     name = 'sites'
@@ -10,17 +10,23 @@ class SitesPySpider(scrapy.Spider):
     start_urls = ['https://mangacat2.net/']
 
     def __init__(self, *args, **kargs):
-        today = dt.now().strftime("%Y%m%d")
+        self.today = dt.now().strftime("%Y%m%d")
         
     def start_requests(self):
         dbConnect = initialize_database("illegals.db")
-        self.start_urls = select_all_fullurls(dbConnect)
+        self.startUrls = select_all_urls(dbConnect)
         self.mainIPs = []
+        self.resultUrl = []
         self.tmpStore = {}
-        self.dbConnectStore = initialize_database2('sites_connection2.db') # 결과물 DB 저장 초기화
-        for url in self.start_urls:
-            yield scrapy.Request( url = url, callback= self.link_parse, method='GET', encoding = 'utf=8')
-        
+        self.dbConnectStore = initialize_database2('sites_connection_stage5.db') # 결과물 DB 저장 초기화
+        count = 5
+        for rep in range(count):
+            self.repUrls = []
+            for url in self.startUrls:
+                yield scrapy.Request(url = url, callback= self.link_parse, method='GET', encoding = 'utf=8')
+                self.repUrls.extend(self.resultUrl) # request 결과 값은 item 프로세스로 넘어가게 되어, 이렇게 설계
+            self.startUrls = self.repUrls
+            print("[+] rep : " + str(rep))
 
     def link_parse(self, response):
         baseIP = get_ip(response.url)
@@ -29,6 +35,8 @@ class SitesPySpider(scrapy.Spider):
         self.mainIPs.append(baseIP)
         print(response.url, baseIP)
         links = response.xpath('//a/@href').re(r'http.*') # ToDo : banner link만 수집할 수 있도록 수정
+        self.resultUrl = []
+        resultIP = []
         for link in links:
             try:
                 ip = get_ip(link)
@@ -46,11 +54,14 @@ class SitesPySpider(scrapy.Spider):
                         """
                         cursor.execute(sql)
                         self.dbConnectStore.commit()
+                        if ip not in resultIP:
+                            resultIP.append(ip)
+                            self.resultUrl.append(link)
                     print("[+] db store : %s, %s" % (baseIP, ip))
             except Exception as e:
                 print(e)
                 continue
-        yield links
+        yield self.resultUrl
 
     def link_parse2(self, response): #임시 테스트 결과 메모리저장
         baseIP = get_ip(response.url)
