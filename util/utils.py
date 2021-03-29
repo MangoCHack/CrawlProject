@@ -1,7 +1,11 @@
+import os
+import argparse
 import sqlite3
 from typing import Dict, Optional
 from urllib.parse import urlparse
 import socket
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'E:\\Project\\CrawlProject\\crawler\\googlekey\\ardent-strength-309105-f9e6b458ea6a.json'
 
 def get_ip(url : str):
     baseUrl = urlparse(url)
@@ -55,7 +59,8 @@ def initialize_database2(dbName : str):
             main_url TEXT,
             main_ip TEXT,
             connect_url TEXT,
-            connect_ip TEXT
+            connect_ip TEXT,
+            stage INT
         )
     """
     )
@@ -217,3 +222,27 @@ def select_available_urls(db_conection):
 
         connection.commit()
         return [url for (url,) in result.fetchall()]
+
+
+def detect_text_uri(uri):
+    """Detects text in the file located in Google Cloud Storage or on the Web.
+    """
+    from google.cloud import vision
+    client = vision.ImageAnnotatorClient()
+    image = vision.Image()
+    image.source.image_uri = uri
+
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+    
+    result = ''
+    for text in texts:
+        result += '{}'.format(text.description)
+
+    if response.error.message:
+        raise Exception(
+            '{}\nFor more info on error messages, check: '
+            'https://cloud.google.com/apis/design/errors'.format(
+                response.error.message))
+
+    return result
