@@ -13,6 +13,8 @@ dash = "==1.19.0"
 pandas = "*"
 dash-cytoscape = "*"
 biopython = "*"
+google-cloud-vision = "*"
+konlpy = "*"
 
 [dev-packages]
 
