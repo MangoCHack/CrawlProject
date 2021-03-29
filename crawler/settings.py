@@ -91,4 +91,4 @@ ROBOTSTXT_OBEY = True
 #pipline
 ITEM_PIPELINES = {'scrapy.pipelines.images.ImagesPipeline' : 1}
 #folder
-IMAGES_STORE = 'images'
+IMAGES_STORE = 'Banners'
