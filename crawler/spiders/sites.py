@@ -2,7 +2,21 @@
 import scrapy
 from datetime import datetime as dt
 from urllib.parse import urlparse
-from util.utils import get_ip, initialize_database, select_all_fullurls, initialize_database2, select_all_urls
+from util.utils import get_ip, initialize_database, select_all_fullurls, initialize_database2, select_all_urls, detect_text_uri, connect_database
+
+keywords = ['코드', '가입', '카지노', '스포츠', '라이브', '전용', '고액', '상한', '호텔', '신규', '국내', '돌발', '놀이터',\
+            '해외', '배당', '가입코드', '문의', '안전', '업체', '메이저', '가능', '이벤트', '천만', '게임', '매충', '사이트', '국내배당',\
+            '돌발', '다양', '지급', '배팅', '보증', '포커', '경기', '미니', '천만원고액전용', '최고', '노리', '최대', '실시간', '제재',\
+            '인플레이', '진행', '환전', '미니게임', '스포츠상한', '매출', '무제', '유럽식', '리얼', '링크', '광고', '검증', '충전',\
+            '머니', '유럽식스포츠', '매일', '시간', '쿠폰', '가지', '그램', '보증업체', '무료', '성인', '라이브포커', '호텔카지노',\
+            '인증', '총판', '주말', '정식', '먹튀', '모든', '오버', '제한', '토토', '동일', '추천', '핸디캡', '총판문의', '주소',\
+            '보기', '정보', '오버가능', '렌트', '보너스', '영상', '제휴', '공식', '무제한', '우리', '해외', '파트너', '베팅',\
+            '시리즈', '고객', '상품', '업계',  '루틴', '세계', '단폴', '입금', '모음', '토렌트', '파워볼', '신규가입', '무한', '전무',\
+            '라이센스', '커뮤니티',  '상한가', '완료', '시스템', '가입머니', '클릭', '보증금', '전세계', '먹튀검증', '각종', '텔레그램',\
+            '예치', '회원', '용품', '증정', '즉시', '시청', '출석', '센터', '당첨', '구매', '고액전용노리터', '발매', '무사고', '비아그라',\
+            '전국', '방송', '전화', '중계', '바나나몰', '명기', '일본', '판매', '웹툰', '놀이터코드', '티비', '배팅가능', '당일', '증명',\
+            '한국', '리얼돌', '획득', '다운로드', '자동', '연속', '분석', '포인트', '더블', '상담', '승인', '션카지노', '도입', '제외', '제제',\
+            '성인용품', '이브', '전신', '전문', '바카라', '각종문의', '이터', '총집합', '크로스', '혜택', '야동', '도박', '수익', '오르가즘', '업소', '배송', '비밀보장']
 
 class SitesPySpider(scrapy.Spider):
     name = 'sites'
@@ -13,73 +27,77 @@ class SitesPySpider(scrapy.Spider):
         self.today = dt.now().strftime("%Y%m%d")
         
     def start_requests(self):
-        dbConnect = initialize_database("illegals.db")
+        dbConnect = connect_database("illegals.db")
         self.startUrls = select_all_urls(dbConnect)
+        
         self.mainIPs = []
-        self.resultUrl = []
-        self.tmpStore = {}
-        self.dbConnectStore = initialize_database2('sites_connection_stage5.db') # 결과물 DB 저장 초기화
-        count = 5
+        self.resultUrls = []
+        self.repUrls = []
+        #self.tmpStore = {}
+        self.dbConnectStore = initialize_database2('sites_connection_stage5_2.db') # 결과물 DB 저장 초기화
+        count = 3
         for rep in range(count):
-            self.repUrls = []
+            self.stage = rep+1
             for url in self.startUrls:
                 yield scrapy.Request(url = url, callback= self.link_parse, method='GET', encoding = 'utf=8')
-                self.repUrls.extend(self.resultUrl) # request 결과 값은 item 프로세스로 넘어가게 되어, 이렇게 설계
+                self.repUrls.extend(self.resultUrls)
             self.startUrls = self.repUrls
             print("[+] rep : " + str(rep))
 
     def link_parse(self, response):
         baseIP = get_ip(response.url)
         if baseIP in self.mainIPs:
-            yield 0
+            yield None
         self.mainIPs.append(baseIP)
         print(response.url, baseIP)
-        links = response.xpath('//a/@href').re(r'http.*') # ToDo : banner link만 수집할 수 있도록 수정
-        self.resultUrl = []
-        resultIP = []
-        for link in links:
+        #links = response.xpath('//a/@href').re(r'http.*') # ToDo : banner link만 수집할 수 있도록 수정
+        #links = response.css('a[href] > img').xpath('..').css('a::attr(href)').re(r'http.*') # 이미지에서 하이퍼링크 추출
+        images = response.css('a[href] > img') # a 태그 하이퍼 링크 있는 이미지
+        links = []
+        for image in images:
+            imageUrl = response.urljoin(image.css('img::attr(src)').get()) #a 태그 하이퍼 링크 -> 이미지 링크
+            link = image.xpath('..').css('a::attr(href)').re(r'http.*') # 이지미링크에 연결된 하이퍼링크
+            #Todo : javascript 등을 통해 연결되는 경우, 주소가 코드에 적혀있지 않을경우 수집 방법 모색
+            #개발자도구 - 네트워크 - xhr 파일을 보면 json형태로 javascript:void(0)로 연결되는 주소가 적혀있는 경우가 있음
+            if link:            
+                text = detect_text_uri(imageUrl)
+                if any(word in text for word in keywords): # 추출된 텍스트에 keyword 하나라도 있으면 배너이미지로 인식
+                    links.append((imageUrl,link[0]))
+            
+        self.resultUrls = []
+        imageUrls = []
+        print("[+] link parse stage : %d "% len(links))
+        for index, link in enumerate(links):
             try:
-                ip = get_ip(link)
-                if not self.db_check(self.dbConnectStore, baseIP, ip): # DB 확인 후 같은 노드 없으면 추가
-                    row = {'main_url':urlparse(response.url).netloc,'main_ip':baseIP,'connect_url':urlparse(link).netloc,'connect_ip':ip}
-                    with self.dbConnectStore:
-                        cursor = self.dbConnectStore.cursor()
-                        sql = f"""
-                            INSERT INTO sites_connection VALUES (
-                                \'{row["main_url"]}\',
-                                \'{row["main_ip"]}\',
-                                \'{row["connect_url"]}\',
-                                \'{row["connect_ip"]}\'
-                            )
-                        """
-                        cursor.execute(sql)
-                        self.dbConnectStore.commit()
-                        if ip not in resultIP:
-                            resultIP.append(ip)
-                            self.resultUrl.append(link)
-                    print("[+] db store : %s, %s" % (baseIP, ip))
+                ip = get_ip(link[1]) #하이퍼링크
+                if ip not in self.mainIPs:
+                    if not self.db_check(self.dbConnectStore, baseIP, ip): # DB 확인 후 같은 IP쌍 없으면 추가
+                        row = {'main_url':urlparse(response.url).netloc,'main_ip':baseIP,'connect_url':urlparse(link[1]).netloc,'connect_ip':ip,'stage':self.stage}
+                        with self.dbConnectStore:
+                            cursor = self.dbConnectStore.cursor()
+                            sql = f"""
+                                INSERT INTO sites_connection VALUES (
+                                    \'{row["main_url"]}\',
+                                    \'{row["main_ip"]}\',
+                                    \'{row["connect_url"]}\',
+                                    \'{row["connect_ip"]}\',
+                                    \'{row["stage"]}\'
+                                )
+                            """
+                            cursor.execute(sql)
+                            self.dbConnectStore.commit()
+                        self.resultUrls.append(link[1])
+                        imageUrls.append(link[0])
+                        print("[+] db store : %s, %s" % (baseIP, ip))
+                        print("[+] urls : %s, %s" % (response.url, link[1]))
             except Exception as e:
                 print(e)
                 continue
-        yield self.resultUrl
+        yield {
+            'image_urls' : imageUrls
+        }
 
     def link_parse2(self, response): #임시 테스트 결과 메모리저장
-        baseIP = get_ip(response.url)
-        print(response.url, baseIP)
-        links = response.xpath('//a/@href').re(r'http.*')
-        for link in links:
-            try:
-                ip = get_ip(link)
-                if (baseIP in self.tmpStore.keys()) and (ip not in self.tmpStore[baseIP]):
-                    self.tmpStore[baseIP].append(ip)
-                    print("[+] db store : %s, %s" % (baseIP, ip))
-                else:
-                    self.tmpStore[baseIP] = [ip,]
-            except:
-                continue
-        yield self.tmpStore
-
-    def trace_parse(self, response): #추적
         baseIP = get_ip(response.url)
         print(response.url, baseIP)
         links = response.xpath('//a/@href').re(r'http.*')
