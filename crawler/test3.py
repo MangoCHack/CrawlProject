@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-with open('demos/data/sitedata2.csv', 'r', encoding="utf-8") as f:
+with open('demos/data/sitedata.csv', 'r', encoding="utf-8") as f:
     network_data = f.read().split('\n')
 
 # We select the first 750 edges and associated nodes for an easier visualization
@@ -10,6 +10,7 @@ cy_nodes = {}
 cy_urls = {}
 
 for network_edge in edges:
+    print(network_edge)
     s_url, source, t_url, target = network_edge.split(" ")
     if source not in nodes:
         nodes.add(source)
@@ -21,7 +22,7 @@ for network_edge in edges:
         cy_urls[target] = t_url
 
 with open('demos/data/result.csv', 'w') as f:
-    f.write('ip weight url\n')
+    f.write('ip,weight,url\n')
     for ip in cy_nodes.keys():
-        f.write(str(ip)+' '+str(cy_nodes[ip])+' '+cy_urls[ip]+'\n')
+        f.write(str(ip)+','+str(cy_nodes[ip])+','+cy_urls[ip]+'\n')
 
