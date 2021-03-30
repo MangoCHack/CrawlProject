@@ -2,7 +2,11 @@
 import scrapy
 from datetime import datetime as dt
 from urllib.parse import urlparse
-from util.utils import get_ip, initialize_database, select_all_fullurls, initialize_database2, select_all_urls, detect_text_uri, connect_database
+from PIL import Image, ImageSequence
+import requests
+import os
+from io import BytesIO
+from util.utils import get_ip, initialize_database, select_all_fullurls, initialize_database2, select_all_urls, detect_text_uri, connect_database, detect_text
 
 keywords = ['코드', '가입', '카지노', '스포츠', '라이브', '전용', '고액', '상한', '호텔', '신규', '국내', '돌발', '놀이터',\
             '해외', '배당', '가입코드', '문의', '안전', '업체', '메이저', '가능', '이벤트', '천만', '게임', '매충', '사이트', '국내배당',\
@@ -16,7 +20,8 @@ keywords = ['코드', '가입', '카지노', '스포츠', '라이브', '전용',
             '예치', '회원', '용품', '증정', '즉시', '시청', '출석', '센터', '당첨', '구매', '고액전용노리터', '발매', '무사고', '비아그라',\
             '전국', '방송', '전화', '중계', '바나나몰', '명기', '일본', '판매', '웹툰', '놀이터코드', '티비', '배팅가능', '당일', '증명',\
             '한국', '리얼돌', '획득', '다운로드', '자동', '연속', '분석', '포인트', '더블', '상담', '승인', '션카지노', '도입', '제외', '제제',\
-            '성인용품', '이브', '전신', '전문', '바카라', '각종문의', '이터', '총집합', '크로스', '혜택', '야동', '도박', '수익', '오르가즘', '업소', '배송', '비밀보장']
+            '성인용품', '이브', '전신', '전문', '바카라', '각종문의', '이터', '총집합', '크로스', '혜택', '야동', '도박', '수익', '오르가즘', '업소',\
+            '배송', '비밀보장', '할인', '애니', '드라마', '마약']
 
 class SitesPySpider(scrapy.Spider):
     name = 'sites'
@@ -33,16 +38,12 @@ class SitesPySpider(scrapy.Spider):
         self.mainIPs = []
         self.resultUrls = []
         self.repUrls = []
-        #self.tmpStore = {}
-        self.dbConnectStore = initialize_database2('sites_connection_stage5_2.db') # 결과물 DB 저장 초기화
-        count = 3
-        for rep in range(count):
-            self.stage = rep+1
-            for url in self.startUrls:
-                yield scrapy.Request(url = url, callback= self.link_parse, method='GET', encoding = 'utf=8')
-                self.repUrls.extend(self.resultUrls)
-            self.startUrls = self.repUrls
-            print("[+] rep : " + str(rep))
+        self.tmpDir = 'tmpimage'
+        os.makedirs(self.tmpDir, exist_ok=True)
+        self.dbConnectStore = initialize_database2('sites_connection_unlimited2.db') # 결과물 DB 저장 초기화
+             
+        for url in self.startUrls:
+            yield scrapy.Request(url = url, callback= self.link_parse, method='GET', encoding = 'utf=8')
 
     def link_parse(self, response):
         baseIP = get_ip(response.url)
@@ -50,8 +51,7 @@ class SitesPySpider(scrapy.Spider):
             yield None
         self.mainIPs.append(baseIP)
         print(response.url, baseIP)
-        #links = response.xpath('//a/@href').re(r'http.*') # ToDo : banner link만 수집할 수 있도록 수정
-        #links = response.css('a[href] > img').xpath('..').css('a::attr(href)').re(r'http.*') # 이미지에서 하이퍼링크 추출
+
         images = response.css('a[href] > img') # a 태그 하이퍼 링크 있는 이미지
         links = []
         for image in images:
@@ -59,20 +59,36 @@ class SitesPySpider(scrapy.Spider):
             link = image.xpath('..').css('a::attr(href)').re(r'http.*') # 이지미링크에 연결된 하이퍼링크
             #Todo : javascript 등을 통해 연결되는 경우, 주소가 코드에 적혀있지 않을경우 수집 방법 모색
             #개발자도구 - 네트워크 - xhr 파일을 보면 json형태로 javascript:void(0)로 연결되는 주소가 적혀있는 경우가 있음
-            if link:            
-                text = detect_text_uri(imageUrl)
+            if link:
+                text = ''
+                if imageUrl.endswith('gif'):
+                    index = 1
+                    try: 
+                        res = requests.get(imageUrl)
+                        image_bytes = BytesIO(res.content)
+                        im = Image.open(image_bytes)
+                        for frame in ImageSequence.Iterator(im):
+                            frame.save(f'./{self.tmpDir}/{index}.png')
+                            text += detect_text(f'./{self.tmpDir}/{index}.png')
+                            os.remove(f'./{self.tmpDir}/{index}.png')
+                            index += 1
+                            if index > 10:
+                                break
+                    except Exception as e:
+                        print("[-] git image extract fail : " + str(e))
+                        continue
+                else:
+                    text = detect_text_uri(imageUrl)
                 if any(word in text for word in keywords): # 추출된 텍스트에 keyword 하나라도 있으면 배너이미지로 인식
                     links.append((imageUrl,link[0]))
             
-        self.resultUrls = []
         imageUrls = []
-        print("[+] link parse stage : %d "% len(links))
         for index, link in enumerate(links):
             try:
                 ip = get_ip(link[1]) #하이퍼링크
                 if ip not in self.mainIPs:
                     if not self.db_check(self.dbConnectStore, baseIP, ip): # DB 확인 후 같은 IP쌍 없으면 추가
-                        row = {'main_url':urlparse(response.url).netloc,'main_ip':baseIP,'connect_url':urlparse(link[1]).netloc,'connect_ip':ip,'stage':self.stage}
+                        row = {'main_url':urlparse(response.url).netloc,'main_ip':baseIP,'connect_url':urlparse(link[1]).netloc,'connect_ip':ip}
                         with self.dbConnectStore:
                             cursor = self.dbConnectStore.cursor()
                             sql = f"""
@@ -80,16 +96,15 @@ class SitesPySpider(scrapy.Spider):
                                     \'{row["main_url"]}\',
                                     \'{row["main_ip"]}\',
                                     \'{row["connect_url"]}\',
-                                    \'{row["connect_ip"]}\',
-                                    \'{row["stage"]}\'
+                                    \'{row["connect_ip"]}\'
                                 )
                             """
                             cursor.execute(sql)
                             self.dbConnectStore.commit()
-                        self.resultUrls.append(link[1])
                         imageUrls.append(link[0])
                         print("[+] db store : %s, %s" % (baseIP, ip))
                         print("[+] urls : %s, %s" % (response.url, link[1]))
+                        yield scrapy.Request(url = link[1], callback= self.link_parse, method='GET', encoding = 'utf=8')
             except Exception as e:
                 print(e)
                 continue
