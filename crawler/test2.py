@@ -14,7 +14,7 @@ server = app.server
 
 # ###################### DATA PREPROCESSING ######################
 # Load data
-with open('demos/data/sitedata.csv', 'r') as f:
+with open('demos/data/sitedata_unlimit2.csv', 'r', encoding='utf-8') as f:
     network_data = f.read().split('\n')
 
 # We select the first 750 edges and associated nodes for an easier visualization
@@ -26,17 +26,18 @@ cy_nodes = []
 
 for network_edge in edges:
     
-    source, target = network_edge.split(" ")
+    source_url, source, target_url, target, keyword, bannercount = network_edge.split(",")
 
     if source not in nodes:
         nodes.add(source)
-        cy_nodes.append({"data": {"id": source, "label": "User #" + source[-5:]}})
+        cy_nodes.append({"data": {"id": source, "label": "User #" + source_url, "banner" : bannercount}})
     if target not in nodes:
         nodes.add(target)
-        cy_nodes.append({"data": {"id": target, "label": "User #" + target[-5:]}})
+        cy_nodes.append({"data": {"id": target, "label": "User #" + target_url, "keyword" : keyword}})
 
     cy_edges.append({
         'data': {
+            'id' : source + target,
             'source': source,
             'target': target
         }
@@ -175,6 +176,7 @@ def update_cytoscape_layout(layout):
                Input('input-follower-color', 'value'),
                Input('input-following-color', 'value'),
                Input('dropdown-node-shape', 'value')])
+
 def generate_stylesheet(node, follower_color, following_color, node_shape):
     if not node:
         return default_stylesheet
@@ -207,9 +209,9 @@ def generate_stylesheet(node, follower_color, following_color, node_shape):
             'z-index': 9999
         }
     }]
-
     for edge in node['edgesData']:
         if edge['source'] == node['data']['id']:
+            
             stylesheet.append({
                 "selector": 'node[id = "{}"]'.format(edge['target']),
                 "style": {
@@ -227,6 +229,7 @@ def generate_stylesheet(node, follower_color, following_color, node_shape):
                     'z-index': 5000
                 }
             })
+            node_trace1(pick_node(edge['target']),follower_color, following_color,stylesheet)
 
         if edge['target'] == node['data']['id']:
             stylesheet.append({
@@ -247,9 +250,60 @@ def generate_stylesheet(node, follower_color, following_color, node_shape):
                     'z-index': 5000
                 }
             })
+            node_trace2(pick_node(edge['source']),follower_color, following_color,stylesheet)
 
     return stylesheet
 
+def pick_node(node_id):
+    for node in cy_nodes:
+        if node['data']['id'] == node_id:
+            return node
+
+def node_trace1(node, follower_color, following_color,stylesheet):
+    for edge in cy_edges:
+        if edge['data']['source'] == node['data']['id']:
+            stylesheet.append({
+                "selector": 'node[id = "{}"]'.format(edge['data']['target']),
+                "style": {
+                    'background-color': following_color,
+                    'opacity': 0.9
+                }
+            })
+            stylesheet.append({
+                "selector": 'edge[id= "{}"]'.format(edge['data']['source']+edge['data']['target']),
+                "style": {
+                    "mid-target-arrow-color": following_color,
+                    "mid-target-arrow-shape": "vee",
+                    "line-color": following_color,
+                    'opacity': 0.9,
+                    'z-index': 5000
+                }
+            })
+            node_trace1(pick_node(edge['data']['target']),follower_color, following_color,stylesheet)
+    return stylesheet
+
+def node_trace2(node, follower_color, following_color,stylesheet):
+    for edge in cy_edges:
+        if edge['data']['target'] == node['data']['id']:
+            stylesheet.append({
+                "selector": 'node[id = "{}"]'.format(edge['data']['source']),
+                "style": {
+                    'background-color': follower_color,
+                    'opacity': 0.9
+                }
+            })
+            stylesheet.append({
+                "selector": 'edge[id= "{}"]'.format(edge['data']['source']+edge['data']['target']),
+                "style": {
+                    "mid-target-arrow-color": follower_color,
+                    "mid-target-arrow-shape": "vee",
+                    "line-color": follower_color,
+                    'opacity': 0.9,
+                    'z-index': 5000
+                }
+            })
+            node_trace2(pick_node(edge['data']['source']),follower_color, following_color,stylesheet)
+    return stylesheet
 
 if __name__ == '__main__':
     app.run_server(debug=True)
