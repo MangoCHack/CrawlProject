@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "ardent-strength-309105",
+  "private_key_id": "f9e6b458ea6ab1803b0d058c63beba16a79a381e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC1/1FBjD1R5ad/\nr/w+UaMt7bgnDpqMITd6D2XpL4qDc/pbTyoNnJcK47SV2MHb+XnUBUNO1se9KV1z\nsjUzyN73UokE8rCsqur+vmleTBDEgtH2DUNvs1qSB+VLYRMnOWRbeWNl+/GtZWRY\noLbW+aCRNBlh+wa6wG7hswVc9OY9Ksw2gp5Er2lcnSM2gllW1g9WkB7JECOtRaL+\n7km2wlhvLNew5M1gtrDIY7qWprbztYecIYdGKLI6L/b5tKz0PukSBOwjJYpoot2s\ngdxPccMzr642Edz+2jTk8ViOv8qavynLBsqA3tHcVRxZ6y/T9K09qmLaGGfI9NNw\n/dyYfLWnAgMBAAECggEAGmJqSENpfF772nIL8ojpTDZDVT4zv47tOP/UeWrP/OCq\nceRXJ2QFLan3OyYSbK6NL+SXbm2KxWyixKwYNGqxkE9h19rLLC0XJlk6c1Y5tBN3\nFuGzXhU1Uyhb4IKxQSV73BsMAvP0hHvHgWXDPAUydvqDl4XJ4vcU3BmU9HX4jvNP\ngFGMp6jGZn3kDTeALmQ683fOcKdJknO1gYhSFb28Jr9/f4t4D/BUgMMtoZUtL2jo\ni2vNJgUufonOoqEIAH08GfHGkhOTBZ4uODuXpf5q1TSJjAG6fjkIdCw3AEjwPb2I\n/zk8Q+og/C+SGcJOA03kw+TAuesEig7ITvZoly1aEQKBgQDvDNclfencjLh9A7UW\nEwwU9cxD+kwyEKpZ4BLjzFBkC4vHfx5BMcikO41T4zXYnM0vhZbLThkW8qiGiw6l\nwVaG+kMIDmlOjX0djZI7weiwFwPjdlGtyQ0Q17BCN/k9xrpU8+YPSoAvcpddsGSb\nBeFI3niEOpGWBmXGi0H53XM5WQKBgQDC5t95tsFKjFzA1/vdtrknyaPEKXDr7vfs\nDDBrHUtYlTdvHm4nNg9CfZhx8XjuYfPL97VDqp0NLnZn0z3RDaMXxmNh8WFR/9BC\nhXAn4SR+0chAiS49RsoGI0bgKr/2ItZwo9+DKekhzF7B8Mh3f/dQYn65xZstV6lB\n7l0iQAKG/wKBgQDcIzb9j7aNJAnBFmjsqx21L6Wr9BO3ByHZIkBDByQA/aD7VlTG\nNNJQa4b6eYJcuAk8egkjsAfq2gvX2rbibekA4/ZWtO7FKAbP8E96OFfP0WIDVjJh\nl4Qwvm/Sizk7aoatNO3npvPkveImpQoAuKl+MWFKY6UuQzX2YMehEg3KAQKBgCt/\nHuyo7qZWgPTAvwMSHmxUwemrXfopkMbrSXr+RKx2ULLJ1ceGdw1dvkHfpB9/WMty\ncs+xKe+hKOeu6yLWqklKCy/2kMOeFbpi0U71HhH3e3t7oggm3jtUcCLjJ4gk6jql\nN+Kr3c2fMJ6TwAl7U5RrBuEqyqDp6Wo/aiWUp3u9AoGAEpGe2p6UnT2j94531zYG\n7tADVsHMLf2D6eC+Dn6OQ931452R4iBvt6LMSIRqayLySrDRzgrm115QTTkWhOrc\nOeayLdzf5mW9/XqgJXi+clrQah/QiHOpP3srMLk4kD9vHhyoQW5H34RWUfIJrfaG\nfMd4uSy+rvNLcMirCWhhDDg=\n-----END PRIVATE KEY-----\n",
+  "client_email": "univ-korea@ardent-strength-309105.iam.gserviceaccount.com",
+  "client_id": "110666708297957205714",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/univ-korea%40ardent-strength-309105.iam.gserviceaccount.com"
+}
