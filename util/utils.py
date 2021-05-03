@@ -59,7 +59,26 @@ def initialize_database2(dbName : str):
             main_url TEXT,
             main_ip TEXT,
             connect_url TEXT,
-            connect_ip TEXT
+            connect_ip TEXT,
+            keywords TEXT,
+            banner_count TEXT
+        )
+    """
+    )
+    dbConnection.commit()
+    return dbConnection
+
+def initialize_database3(dbName : str):
+    dbConnection = connect_database(dbName)
+    cursor = dbConnection.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sites_info(
+            main_url TEXT,
+            main_ip TEXT,
+            banner_count TEXT,
+            country TEXT
         )
     """
     )

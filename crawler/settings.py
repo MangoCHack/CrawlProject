@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = 'crawler.spiders'
 #USER_AGENT = 'crawler (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -89,6 +89,7 @@ ROBOTSTXT_OBEY = True
 
 
 #pipline
-ITEM_PIPELINES = {'scrapy.pipelines.images.ImagesPipeline' : 1}
-#folder
-IMAGES_STORE = 'unlimitted'
+ITEM_PIPELINES : {
+    #'scrapy.pipelines.images.ImagesPipeline' : 1, 
+    'crawler.pipelines.CrawlerPipeline': 300
+}
