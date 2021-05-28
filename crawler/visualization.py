@@ -14,7 +14,7 @@ server = app.server
 
 # ###################### DATA PREPROCESSING ######################
 # Load data
-with open('demos/data/sitedata_unlimit2.csv', 'r', encoding='utf-8') as f:
+with open('result2.csv', 'r', encoding='cp949') as f:
     network_data = f.read().split('\n')
 
 # We select the first 750 edges and associated nodes for an easier visualization
@@ -26,8 +26,8 @@ cy_nodes = []
 
 for network_edge in edges:
     
-    source_url, source, target_url, target, keyword, bannercount = network_edge.split(",")
-
+    source_url,source,target_url,target,keyword,bannercount,site_type,main_country,is_main_cloud,main_org,connect_country,is_connect_cloud,connect_org,main_ga,connect_ga = network_edge.split(",")
+    target_url = target_url.strip('/')
     if source not in nodes:
         nodes.add(source)
         cy_nodes.append({"data": {"id": source, "label": "User #" + source_url, "banner" : bannercount}})
